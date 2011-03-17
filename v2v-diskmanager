@@ -1,6 +1,29 @@
 #!/bin/bash
 # dependencies: vmware-vdiskimage, VBoxManage, qemu-img
 
+function launch {
+    error=$2
+    if [ -z "$error" ]; then
+        error=0
+    fi
+
+    cmd=${1:-"pwd"}
+    echo "command: ${cmd}"
+    eval $cmd
+    errorlevel=$?
+    if [ "$errorlevel" -ne "$error" ]; then
+        echo "Error executing: $cmd"
+        echo "Errorlevel: $errorlevel"
+        
+        if [ -n "$3" ]; then
+            cmd=${3:-"pwd"}
+            echo "fail command: ${cmd}"
+            eval $cmd
+        fi
+        exit $errorlevel;
+    fi
+}
+
 FINISHED=0
 E_UNSUPPORTED_FORMAT=1
 E_VBOXMANAGE_NOT_FOUND=2
@@ -9,9 +32,10 @@ E_INVALID_NUM_PARAMS=4
 E_QEMU_FAILED=5
 E_VBOX_FAILED=5
 
-
 qemu_img="qemu-img"
 vboxmanage="VBoxManage"
+
+uuid="`pwd`/`uuidgen`"
 
 function checkRequirements
 {
@@ -123,11 +147,12 @@ checkFormat $input_format
 checkFormat $output_format
 
 if [ "$input_format" == "$output_format" ]; then
-    `cp $src_path $dst_path`
+    launch "cp $src_path $dst_path"
     exit 0
 fi
 
-rm -f $dst_path #ensure destination file does not exist (apps library recovery)
+#ensure destination file does not exist (apps library recovery)
+launch "rm -f $dst_path"
 
 while [ $FINISHED -eq 0 ]; do
     if [ $input_format == "QCOW2" ] || [ $input_format == "QEMU_VMDK" ] && [ $FINISHED -eq 0 ]; then
@@ -135,22 +160,17 @@ while [ $FINISHED -eq 0 ]; do
         if [ $output_format == "-1" ]; then
             output_format=$(getQemuString VMDK_SPARSE)
             tmpfile="$dst_path"
-            dst_path="$tmpfile.tmp"
+            dst_path="$uuid"
         else
             FINISHED=1
         fi
-        `$qemu_img convert $src_path -O $output_format $dst_path &>/tmp/log`
+        launch "$qemu_img convert $src_path -c -O $output_format $dst_path"
+
         ERROR=$?
-        if [ `echo "$file" | grep "\.tmp"` ]; then
-            rm "$file"
+        if [ "$src_path" == $uuid ]; then
+            launch "rm $uuid"
         fi	
 
-        if [ $ERROR != 0 ];then
-            echo "[!] Error converting via qemu"
-            echo "[+] $qemu_img convert $src_path -O $output_format $dst_path"
-            exit $E_QEMU_FAILED
-        fi
-   
         input_format="VMDK_SPARSE"
         output_format=$3
         src_path="$dst_path"
@@ -158,25 +178,19 @@ while [ $FINISHED -eq 0 ]; do
     elif [ $input_format == "VMDK_STREAM_OPTIMIZED" ] || [ $input_format == "VDI" ] || [ $input_format == "VHD" ] || [ $input_format == "VMDK_SPARSE" ] || [ $input_format == "VMDK_SPARSE" ]  && [ $FINISHED -eq 0 ]; then
         output_format=$(getVBoxString $3)
         if [ "$output_format" == "-1" ]; then
-            output_format=$(getVBoxString "VMWARE")
+            output_format=$(getVBoxString "VMDK_SPARSE")
             tmpfile="$dst_path"
-            dst_path="$tmpfile.tmp"
+            dst_path="$uuid"
         else
             FINISHED=1
         fi
 
-        `$vboxmanage clonehd --format $output_format $src_path  $dst_path &>/tmp/log`
+        launch "$vboxmanage clonehd --format $output_format $src_path  $dst_path"
         ERROR=$?
-        if [ `echo "$file" | grep "\.tmp"` ]; then
-            rm "$file"
+        if [ "$src_path" == $uuid ]; then
+            launch "rm $uuid"
         fi	
 
-        if [ $ERROR != 0 ];then
-            echo "[!] Error converting via VBoxManage"
-            echo "$vboxmanage clonehd --format $output_format $src_path  $dst_path"
-            exit $E_VBOX_FAILED
-        fi
-    
         input_format="QEMU_VMDK"
         output_format=$3
         src_path="$dst_path"
@@ -186,27 +200,25 @@ while [ $FINISHED -eq 0 ]; do
         if [ "$output_format" == "-1" ] || [ "$3" == "VMDK_STREAM_OPTIMIZED" ]; then
             output_format=$(getVBoxString "VMDK_SPARSE")
             tmpfile="$dst_path"
-            dst_path="$tmpfile.tmp"
+            dst_path="$uuid"
         else
             FINISHED=1
         fi
 
-        `$vboxmanage convertfromraw --format $output_format $src_path  $dst_path &>/tmp/log`
+        launch "$vboxmanage convertfromraw --format $output_format $src_path $dst_path"
+
         ERROR=$?
-        if [ `echo "$file" | grep "\.tmp"` ]; then
-            rm "$file"
+        if [ "$src_path" == $uuid ]; then
+            launch "rm $file"
         fi	
 
-        if [ $ERROR != 0 ];then
-            echo "[!] Error converting via VBoxManage"
-            echo "$vboxmanage convertfromraw --format $output_format $src_path  $dst_path"
-            exit $E_VBOX_FAILED
-        fi
-    
         input_format="VMDK_SPARSE"
         output_format=$3
         src_path="$dst_path"
         dst_path="$tmpfile"
     fi
 done
+
+launch "chmod 644 $4"
+
 exit 0

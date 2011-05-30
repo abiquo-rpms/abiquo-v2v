@@ -1,8 +1,8 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:     abiquo-v2v
-Version:  1.7.6
-Release:  1%{?dist}%{?buildstamp}
+Version:  1.8
+Release:  0%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 

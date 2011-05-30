@@ -1,7 +1,37 @@
 #!/bin/bash
 
+#$1: command to run
+#$2: expected error level. By default = 0
+#$3: rollback action in case of error.
+
+function launch {
+    error=$2
+    if [ -z "$error" ]; then
+        error=0
+    fi  
+
+    cmd=${1:-"pwd"}
+    echo "command: ${cmd}"
+    eval $cmd
+    errorlevel=$?
+    if [ "$errorlevel" -ne "$error" ]; then
+        echo "Error executing: $cmd"
+        echo "Errorlevel: $errorlevel"
+    
+        if [ -n "$3" ]; then
+            cmd=${3:-"pwd"}
+            echo "fail command: ${cmd}"
+            eval $cmd
+        fi  
+        exit $errorlevel;
+    fi  
+}
+
 iscsiadm=`which iscsiadm`
 dd=`which dd`
+
+# This default value works for a 1Gigabit network and a Sata disk
+bs="4K"
 
 if [ ! -f "$iscsiadm" ]; then
 	echo "[!] iscsiadm not found! You must install openiscsi"
@@ -57,7 +87,7 @@ if [ "$mode" == "deploy" ]; then
         exit 1
     fi
 
-    $dd if="$file" of="$iqnfile"
+    launch "$dd bs=$bs if=\"$file\" of=\"$iqnfile\""
 
     if [ $? != 0 ]; then
         echo "[!] $mode: Error clonning $file to $ip:$iqn"
@@ -71,9 +101,9 @@ elif [ "$mode" == "bundle" ]; then
     fi
 
     if [ -z $size ]; then
-        $dd if="$iqnfile" of="$file"
+        launch $dd bs="$bs" if="$iqnfile" of="$file"
     else
-        $dd ibs=1024 count=$size if="$iqnfile" of="$file"
+        launch $dd ibs=1024 count=$size if="$iqnfile" of="$file"
     fi
     if [ $? != 0 ]; then
         echo "[!] $mode: Error clonning $ip:$iqn to $file"

@@ -2,7 +2,7 @@
 
 Name:     abiquo-v2v
 Version:  1.8
-Release:  0%{?dist}%{?buildstamp}
+Release:  1%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 
@@ -78,6 +78,9 @@ EOF
 
 
 %changelog
+* Mon May 30 2011 Sergio Rubio <srubio@abiquo.com> - 1.8-1
+- updated to 1.8
+
 * Thu Apr 14 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.6-1
 - bumped version
 

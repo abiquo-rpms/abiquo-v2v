@@ -1,5 +1,10 @@
 #!/bin/bash
-# dependencies: vmware-vdiskimage, VBoxManage, qemu-img
+# dependencies: VBoxManage, qemu-img
+
+#$1: command to run
+#$2: expected error level. By default = 0
+#$3: rollback action in case of error.
+
 
 function launch {
     error=$2
@@ -108,14 +113,14 @@ function getQemuString ()
 {
     if [ "$1" == "RAW" ];then
         echo raw
-    elif [ "$1" == "VMDK_FLAT" ];then
-        echo raw
+#    elif [ "$1" == "VMDK_FLAT" ];then
+#        echo raw
     elif [ "$1" == "QCOW2" ];then
         echo qcow2
-    elif [ "$1" == "VDI" ];then
-        echo vdi
-    elif [ "$1" == "VHD" ];then
-        echo vpc
+#    elif [ "$1" == "VDI" ];then
+#        echo vdi
+#    elif [ "$1" == "VHD" ];then
+#        echo vpc
     elif [ "$1" == "QEMU_VMDK" ];then
         echo vmdk
     elif [ "$1" == "VMDK_SPARSE" ];then
@@ -140,8 +145,12 @@ fi
 
 input_format=$1
 output_format=$3
-src_path=$2
-dst_path=$4
+#src_path=$2
+#dst_path=$4
+# Files come encoded in base64 to avoid spaces and strange character errors in the file names
+src_path=`echo $2 | base64 -d`
+dst_path=`echo $4 | base64 -d`
+original_dst_path=$dst_path
 
 checkFormat $input_format
 checkFormat $output_format
@@ -164,18 +173,18 @@ while [ $FINISHED -eq 0 ]; do
         else
             FINISHED=1
         fi
-        launch "$qemu_img convert $src_path -c -O $output_format $dst_path"
+        launch "$qemu_img convert $src_path -O $output_format $dst_path"
 
         ERROR=$?
         if [ "$src_path" == $uuid ]; then
-            launch "rm $uuid"
+            launch "rm -f $uuid"
         fi	
 
         input_format="VMDK_SPARSE"
         output_format=$3
         src_path="$dst_path"
         dst_path="$tmpfile"
-    elif [ $input_format == "VMDK_STREAM_OPTIMIZED" ] || [ $input_format == "VDI" ] || [ $input_format == "VHD" ] || [ $input_format == "VMDK_SPARSE" ] || [ $input_format == "VMDK_SPARSE" ]  && [ $FINISHED -eq 0 ]; then
+    elif [ $input_format == "VMDK_STREAM_OPTIMIZED" ] || [ $input_format == "VDI" ] || [ $input_format == "VHD" ] || [ $input_format == "VMDK_SPARSE" ] && [ $FINISHED -eq 0 ]; then
         output_format=$(getVBoxString $3)
         if [ "$output_format" == "-1" ]; then
             output_format=$(getVBoxString "VMDK_SPARSE")
@@ -186,9 +195,11 @@ while [ $FINISHED -eq 0 ]; do
         fi
 
         launch "$vboxmanage clonehd --format $output_format $src_path  $dst_path"
+
         ERROR=$?
         if [ "$src_path" == $uuid ]; then
-            launch "rm $uuid"
+    	    echo "Removing image"
+            launch "rm -f $uuid"
         fi	
 
         input_format="QEMU_VMDK"
@@ -209,7 +220,7 @@ while [ $FINISHED -eq 0 ]; do
 
         ERROR=$?
         if [ "$src_path" == $uuid ]; then
-            launch "rm $file"
+            launch "rm -f $file"
         fi	
 
         input_format="VMDK_SPARSE"
@@ -219,6 +230,6 @@ while [ $FINISHED -eq 0 ]; do
     fi
 done
 
-launch "chmod 644 $4"
+launch "chmod 644 $original_dst_path"
 
 exit 0

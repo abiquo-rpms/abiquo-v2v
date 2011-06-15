@@ -2,7 +2,7 @@
 
 Name:     abiquo-v2v
 Version:  1.8
-Release:  1%{?dist}%{?buildstamp}
+Release:  2%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 
@@ -78,6 +78,9 @@ EOF
 
 
 %changelog
+* Wed Jun 15 2011 Sergio Rubio <rubiojr@frameos.org> - 1.8-2
+- updated mechadora
+
 * Mon May 30 2011 Sergio Rubio <srubio@abiquo.com> - 1.8-1
 - updated to 1.8
 

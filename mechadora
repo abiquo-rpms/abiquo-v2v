@@ -101,9 +101,9 @@ elif [ "$mode" == "bundle" ]; then
     fi
 
     if [ -z $size ]; then
-        launch $dd bs="$bs" if="$iqnfile" of="$file"
+        launch "$dd bs=\"$bs\" if=\"$iqnfile\" of=\"$file\""
     else
-        launch $dd ibs=1024 count=$size if="$iqnfile" of="$file"
+        launch "$dd ibs=1024 count=\"$size\" if=\"$iqnfile\" of=\"$file\""
     fi
     if [ $? != 0 ]; then
         echo "[!] $mode: Error clonning $ip:$iqn to $file"

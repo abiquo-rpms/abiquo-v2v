@@ -5,7 +5,6 @@
 #$2: expected error level. By default = 0
 #$3: rollback action in case of error.
 
-
 function launch {
     error=$2
     if [ -z "$error" ]; then
@@ -35,12 +34,11 @@ E_VBOXMANAGE_NOT_FOUND=2
 E_QEMUIMG_NOT_FOUND=3
 E_INVALID_NUM_PARAMS=4
 E_QEMU_FAILED=5
-E_VBOX_FAILED=5
+E_VBOX_FAILED=6
 
 qemu_img="qemu-img"
 vboxmanage="VBoxManage"
 
-uuid="`pwd`/`uuidgen`"
 
 function checkRequirements
 {
@@ -164,6 +162,8 @@ fi
 launch "rm -f $dst_path"
 
 while [ $FINISHED -eq 0 ]; do
+    olduuid=$uuid
+    uuid="`pwd`/`uuidgen`"
     if [ $input_format == "QCOW2" ] || [ $input_format == "QEMU_VMDK" ] && [ $FINISHED -eq 0 ]; then
         output_format=$(getQemuString $3)
         if [ $output_format == "-1" ]; then
@@ -176,8 +176,8 @@ while [ $FINISHED -eq 0 ]; do
         launch "$qemu_img convert $src_path -O $output_format $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $uuid ]; then
-            launch "rm -f $uuid"
+        if [ "$src_path" == $olduuid ]; then
+            launch "rm -f $olduuid"
         fi	
 
         input_format="VMDK_SPARSE"
@@ -197,9 +197,9 @@ while [ $FINISHED -eq 0 ]; do
         launch "$vboxmanage clonehd --format $output_format $src_path  $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $uuid ]; then
+        if [ "$src_path" == $olduuid ]; then
     	    echo "Removing image"
-            launch "rm -f $uuid"
+            launch "rm -f $olduuid"
         fi	
 
         input_format="QEMU_VMDK"
@@ -219,8 +219,8 @@ while [ $FINISHED -eq 0 ]; do
         launch "$vboxmanage convertfromraw --format $output_format $src_path $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $uuid ]; then
-            launch "rm -f $file"
+        if [ "$src_path" == $olduuid ]; then
+            launch "rm -f $olduuid"
         fi	
 
         input_format="VMDK_SPARSE"

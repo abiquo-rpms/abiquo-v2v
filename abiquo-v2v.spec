@@ -2,7 +2,7 @@
 
 Name:     abiquo-v2v
 Version:  1.8.5
-Release:  1%{?dist}%{?buildstamp}
+Release:  2%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 
@@ -78,6 +78,9 @@ EOF
 
 
 %changelog
+* Fri Oct 07 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-2
+- updated v2v-diskmanager script
+
 * Fri Sep 30 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-1
 - bumped version to 1.8.5
 

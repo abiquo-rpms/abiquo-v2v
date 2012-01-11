@@ -1,15 +1,16 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:     abiquo-v2v
-Version:  1.8.5
-Release:  2%{?dist}%{?buildstamp}
+Version:  2.0
+Release:  1%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 
 URL:      http://www.abiquo.com 
-Source0:  bpm-async.war
+Source0:  %{?abiquo_binaries_url}bpm-async.war
 Source1:  v2v-diskmanager
 Source2:  mechadora
+Source3:  abiquo.properties.v2v
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: abiquo-core vboxmanage iscsi-initiator-utils nfs-utils samba
 BuildArch: noarch
@@ -27,6 +28,7 @@ Make sure that you read the license agrements in /usr/share/doc/abiquo-core lice
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/
 mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/scripts
+mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/bpm-async/ %{SOURCE0}
 cp  %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/scripts
@@ -34,6 +36,7 @@ cp  %{SOURCE2} $RPM_BUILD_ROOT/%{abiquo_basedir}/scripts
 mkdir -p $RPM_BUILD_ROOT/usr/bin/
 cp %{SOURCE1} $RPM_BUILD_ROOT/usr/bin/
 cp %{SOURCE2} $RPM_BUILD_ROOT/usr/bin/
+cp %{SOURCE3} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -75,9 +78,14 @@ EOF
 %{abiquo_basedir}/scripts
 /usr/bin/mechadora
 /usr/bin/v2v-diskmanager
+%{abiquo_basedir}/config/examples/abiquo.properties.v2v
 
 
 %changelog
+* Mon Dec 19 2011 Sergio Rubio <srubio@abiquo.com> - 2.0-1
+- bumped version to 2.0
+- added v2v sample properties file
+
 * Fri Oct 07 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-2
 - updated v2v-diskmanager script
 

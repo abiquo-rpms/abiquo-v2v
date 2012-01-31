@@ -4,6 +4,23 @@
 #$2: expected error level. By default = 0
 #$3: rollback action in case of error.
 
+
+iscsiadm=`which iscsiadm`
+dd=`which dd`
+
+# This default value works for a 1Gigabit network and a Sata disk
+bs="4K"
+
+# How many times we wait to obtain the lun dev
+retries=5
+
+mode=$1
+ip=$2
+iqn=$3
+file=$4
+path=$5
+size=$6
+
 function launch {
     error=$2
     if [ -z "$error" ]; then
@@ -27,11 +44,6 @@ function launch {
     fi  
 }
 
-iscsiadm=`which iscsiadm`
-dd=`which dd`
-
-# This default value works for a 1Gigabit network and a Sata disk
-bs="4K"
 
 if [ ! -f "$iscsiadm" ]; then
 	echo "[!] iscsiadm not found! You must install openiscsi"
@@ -48,12 +60,6 @@ if [ $# -lt 5 ]; then
 	exit 254
 fi
 
-mode=$1
-ip=$2
-iqn=$3
-file=$4
-path=$5
-size=$6
 
 $iscsiadm -m node -T "$iqn" -p "$ip" -u
 $iscsiadm -m node -T "$iqn" -p "$ip" -l
@@ -75,10 +81,21 @@ if [ $? != 0 ]; then
 fi
 
 
-# We wait while the system assigns the device (/dev/sdx) 
-sleep 2
-
 iqnfile=/dev/disk/by-path/$path
+
+while [ "$retries" -gt 0 ]; do
+    # We wait while the system assigns the device (/dev/sdx) 
+    sleep 2
+    if [ -L "$iqnfile" ]; then
+        break
+    fi
+    retries=`expr $retries - 1`
+done
+
+if [ ! -L "$iqnfile" ]; then
+    echo "[!] $mode: Cannot get the dev path for $ip:$iqn"
+    exit 5
+fi
 
 # file => iqn
 if [ "$mode" == "deploy" ]; then

@@ -2,14 +2,14 @@
 
 Name:     abiquo-v2v
 Version:  2.0
-Release:  1%{?dist}%{?buildstamp}
+Release:  2%{?dist}%{?buildstamp}
 Summary:  Abiquo V2V Conversion Component 
 Group:    Development/System 
 License:  Multiple 
 URL:      http://www.abiquo.com 
 Source0:  %{?abiquo_binaries_url}bpm-async.war
-Source1:  v2v-diskmanager
-Source2:  mechadora
+Source1:  %{?abiquo_binaries_url}v2v-diskmanager
+Source2:  %{?abiquo_binaries_url}mechadora
 Source3:  abiquo.properties.v2v
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: abiquo-core vboxmanage iscsi-initiator-utils nfs-utils samba
@@ -82,6 +82,9 @@ EOF
 
 
 %changelog
+* Tue Jan 31 2012 Sergio Rubio <srubio@abiquo.com> - 2.0-2
+- updated mechadora and v2v-diskmanager sources
+
 * Mon Dec 19 2011 Sergio Rubio <srubio@abiquo.com> - 2.0-1
 - bumped version to 2.0
 - added v2v sample properties file

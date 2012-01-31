@@ -176,7 +176,7 @@ while [ $FINISHED -eq 0 ]; do
         launch "$qemu_img convert $src_path -O $output_format $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $olduuid ]; then
+        if [ "$src_path" == "$olduuid" ]; then
             launch "rm -f $olduuid"
         fi	
 
@@ -197,7 +197,7 @@ while [ $FINISHED -eq 0 ]; do
         launch "$vboxmanage clonehd --format $output_format $src_path  $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $olduuid ]; then
+        if [ "$src_path" == "$olduuid" ]; then
     	    echo "Removing image"
             launch "rm -f $olduuid"
         fi	
@@ -219,7 +219,7 @@ while [ $FINISHED -eq 0 ]; do
         launch "$vboxmanage convertfromraw --format $output_format $src_path $dst_path"
 
         ERROR=$?
-        if [ "$src_path" == $olduuid ]; then
+        if [ "$src_path" == "$olduuid" ]; then
             launch "rm -f $olduuid"
         fi	
 
